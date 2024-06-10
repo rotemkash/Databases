@@ -1,0 +1,53 @@
+-- q1a --
+SELECT p1.product_name, p1.price
+FROM products p1
+WHERE p1.branch_name = 'ks' AND p1.dept = 'milk'
+AND EXISTS (
+SELECT 1
+FROM products p2
+WHERE p2.branch_name = 'ks' AND p2.dept = 'meat' AND p2.price > p1.price
+);
+
+-- q1b --
+SELECT product_name, price
+FROM products
+WHERE branch_name = 'bs' AND dept = 'milk'
+ORDER BY price DESC
+LIMIT 1;
+
+-- q1c --
+SELECT p1.branch_name, p1.product_name
+FROM products p1
+WHERE NOT EXISTS (
+SELECT 1
+FROM products p2
+WHERE p2.product_name = p1.product_name AND p2.branch_name != p1.branch_name
+);
+
+-- q1d --
+SELECT DISTINCT branch_name
+FROM products
+WHERE branch_name NOT IN (
+SELECT DISTINCT branch_name
+FROM products
+WHERE dept = 'milk'
+);
+
+-- q1e --
+SELECT DISTINCT p1.branch_name
+FROM products p1
+WHERE NOT EXISTS (
+SELECT 1
+FROM products p2
+WHERE p2.dept = 'toys' AND NOT EXISTS (
+SELECT 1
+FROM products p3
+WHERE p3.branch_name = p1.branch_name AND p3.product_name = p2.product_name
+)
+);
+
+-- q1f --
+SELECT product_name
+FROM products
+GROUP BY product_name
+HAVING COUNT(DISTINCT branch_name) = (SELECT COUNT(DISTINCT branch_name) FROM products);

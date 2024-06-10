@@ -1,0 +1,20 @@
+create temporary table parties( 
+   Party_name text, member_name text, Knesset_num int  
+) ; 
+ 
+create temporary table members( 
+   member_name text, sex bool, bdate date  
+) ; 
+INSERT INTO parties VALUES
+    ('Democrats', 'John', 17),
+    ('Republicans', 'Bob', 17), 
+    ('Greens', 'Alice', 17),
+    ('Republicans', 'Charlie', 18),
+    ('Greens', 'Eve', 18);
+
+INSERT INTO members VALUES
+    ('John', true, '1975-05-12'),
+    ('Bob', true, '1972-11-23'),
+    ('Alice', false, '1977-09-30'), 
+    ('Charlie', true, '1968-03-15'),
+    ('Eve', false, '1983-07-01');

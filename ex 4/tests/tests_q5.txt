@@ -1,0 +1,10 @@
+INSERT INTO view_ab VALUES (10, 20);
+SELECT * FROM a; -- Output: 10
+SELECT * FROM b; -- Output: 20
+
+INSERT INTO view_ab VALUES (30, 40);
+SELECT * FROM a; -- Output: 10, 30
+SELECT * FROM b; -- Output: 20, 40
+
+INSERT INTO view_ab VALUES (0, 50);
+-- Error: NEW row for relation "a" violates check constraint "a_a_check"

@@ -1,0 +1,122 @@
+--q1a--
+CREATE OR REPLACE FUNCTION party_member_filter(party_name TEXT, gender BOOL, start_date DATE, end_date DATE)
+RETURNS TABLE (member_name TEXT)
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.member_name
+    FROM parties p
+    JOIN members m ON p.member_name = m.member_name
+    WHERE p.party_name = party_member_filter.party_name
+      AND m.sex = party_member_filter.gender
+      AND m.bdate BETWEEN party_member_filter.start_date AND party_member_filter.end_date;
+END;
+$$ LANGUAGE plpgsql;
+
+--q1b--
+SELECT DISTINCT party_name
+FROM parties p
+JOIN members m ON p.member_name = m.member_name
+WHERE m.sex = true
+  AND m.bdate BETWEEN '1970-01-01' AND '1979-12-31'
+  AND EXISTS (
+    SELECT 1 
+    FROM party_member_filter(p.party_name, true, '1970-01-01', '1979-12-31')
+  );
+
+--q2--
+CREATE OR REPLACE FUNCTION prevent_duplicate_values()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (NEW.a IN (SELECT a FROM ab)
+        OR NEW.a IN (SELECT b FROM ab)
+        OR NEW.b IN (SELECT a FROM ab)
+        OR NEW.b IN (SELECT b FROM ab))
+    THEN
+        RAISE EXCEPTION 'Duplicate value found in table ab';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_duplicates
+BEFORE INSERT OR UPDATE ON ab
+FOR EACH ROW
+EXECUTE PROCEDURE prevent_duplicate_values();
+ALTER TABLE ab ENABLE TRIGGER prevent_duplicates;
+
+--q3--
+CREATE OR REPLACE FUNCTION prevent_courses_different_fields()
+RETURNS TRIGGER AS $$
+DECLARE
+    course1_field TEXT;
+    course2_field TEXT;
+BEGIN
+    SELECT field INTO course1_field
+    FROM course_field
+    WHERE course_name = NEW.course1;
+
+    SELECT field INTO course2_field
+    FROM course_field
+    WHERE course_name = NEW.course2;
+
+    IF course1_field != course2_field THEN
+        RAISE EXCEPTION 'Courses % and % are from different fields', NEW.course1, NEW.course2;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_courses_different_fields
+BEFORE INSERT OR UPDATE ON prerequisite
+FOR EACH ROW
+EXECUTE PROCEDURE prevent_courses_different_fields();
+ALTER TABLE prerequisite ENABLE TRIGGER prevent_courses_different_fields;
+
+--q4--
+CREATE OR REPLACE FUNCTION prevent_value_more_than_double()
+RETURNS TRIGGER AS $$
+DECLARE
+    old_value INT;
+BEGIN
+    SELECT a INTO old_value FROM a WHERE ctid = OLD.ctid;
+
+    IF NEW.a > old_value * 2 THEN
+        RAISE EXCEPTION 'Cannot increase value by more than double';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_value_more_than_double
+BEFORE UPDATE ON a
+FOR EACH ROW
+EXECUTE PROCEDURE prevent_value_more_than_double();
+ALTER TABLE a ENABLE TRIGGER prevent_value_more_than_double;
+
+--q5--
+CREATE TEMPORARY TABLE a (
+    a INT CHECK (a > 0)
+);
+
+CREATE TEMPORARY TABLE b (
+    b INT CHECK (b > 0)
+);
+
+CREATE TEMPORARY VIEW view_ab AS
+    SELECT * FROM a, b;
+CREATE OR REPLACE FUNCTION insert_into_ab_tables()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO a (a) VALUES (NEW.a);
+    INSERT INTO b (b) VALUES (NEW.b);
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER insert_into_ab
+INSTEAD OF INSERT ON view_ab
+FOR EACH ROW
+EXECUTE PROCEDURE insert_into_ab_tables();

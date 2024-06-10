@@ -1,0 +1,26 @@
+create temporary table course_field (
+    course_name TEXT,
+    field TEXT
+);
+create temporary table prerequisite (
+    course1 TEXT,
+    course2 TEXT
+);
+
+INSERT INTO course_field VALUES
+    ('infy1', 'math'),
+    ('infy2', 'math'),
+    ('intro2cs', 'programming'),
+    ('oop1', 'programming'),
+    ('databases', 'programming');
+
+INSERT INTO prerequisite VALUES
+    ('infy1', 'infy2'),
+    ('intro2cs', 'oop1'),
+    ('databases', 'oop1');
+
+--try inserting a line that violates the rule of courses from two different fields:--
+INSERT INTO prerequisite VALUES ('intro2cs', 'infy2');
+
+--try updating an existing row in a way that violates the rule:--
+UPDATE prerequisite SET course2 = 'infy2' WHERE course1 = 'databases';

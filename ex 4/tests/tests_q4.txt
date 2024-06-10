@@ -1,0 +1,15 @@
+create temporary table a ( 
+  a int check(a > 0) 
+) ; 
+
+INSERT INTO a VALUES (10);
+SELECT * FROM a;  -- Output: 10
+
+UPDATE a SET a = 20 WHERE a = 10;  -- Allowed, new value is double the old value
+SELECT * FROM a;  -- Output: 20
+
+UPDATE a SET a = 41 WHERE a = 20;  -- Not allowed, new value exceeds double the old value
+-- Error: Cannot increase value by more than double
+
+UPDATE a SET a = 15 WHERE a = 20;  -- Allowed, new value is less than double the old value
+SELECT * FROM a;  -- Output: 15
